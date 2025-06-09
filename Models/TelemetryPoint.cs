@@ -7,5 +7,7 @@
         public double Throttle { get; set; }
         public double Brake { get; set; }
         public int Gear { get; set; }
+        public double Distance { get; set; }
+
     }
 }
