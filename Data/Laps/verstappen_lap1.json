@@ -1,3 +1,34 @@
 {
-
+  "driver": "VER",
+  "lapNumber": 1,
+  "data": [
+    {
+      "time": 0.0,
+      "speed": 120,
+      "throttle": 100,
+      "brake": 0,
+      "gear": 5
+    },
+    {
+      "time": 0.2,
+      "speed": 130,
+      "throttle": 90,
+      "brake": 10,
+      "gear": 5
+    },
+    {
+      "time": 0.4,
+      "speed": 140,
+      "throttle": 70,
+      "brake": 30,
+      "gear": 6
+    },
+    {
+      "time": 0.6,
+      "speed": 160,
+      "throttle": 50,
+      "brake": 50,
+      "gear": 6
+    }
+  ]
 }

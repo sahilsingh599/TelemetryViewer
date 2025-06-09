@@ -7,10 +7,22 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <None Remove="Data\Laps\leclerc_lap2.json" />
+    <None Remove="Data\Laps\norris_lap3.json" />
+    <None Remove="Data\Laps\verstappen_lap1.json" />
     <None Remove="Data\sample_lap.json" />
   </ItemGroup>
 
   <ItemGroup>
+    <Content Include="Data\Laps\leclerc_lap2.json">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Data\Laps\norris_lap3.json">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Data\Laps\verstappen_lap1.json">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
     <Content Include="Data\sample_lap.json">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>

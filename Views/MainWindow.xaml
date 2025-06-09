@@ -13,29 +13,27 @@
 
     <Grid>
         <StackPanel Margin="20">
-            <TextBlock Text="F1 Telemetry - Speed Plot" 
-                       FontSize="24" 
-                       FontWeight="Bold" 
-                       Margin="0,0,0,10" 
-                       HorizontalAlignment="Center"/>
             <TextBlock Text="F1 Telemetry Viewer" FontSize="24" FontWeight="Bold" Margin="0,0,0,10" HorizontalAlignment="Center"/>
 
-            <!-- X-Axis label manually -->
-            <TextBlock Text="Time (s)" FontSize="14" FontWeight="SemiBold" Margin="0,10,0,5" HorizontalAlignment="Center"/>
-            
             <ComboBox ItemsSource="{Binding AvailableLaps}" 
-                      SelectedItem="{Binding SelectedLap}"
-                      Width="300" Margin="0,0,0,10"
-                      DisplayMemberPath="DisplayName"
-                      HorizontalAlignment="Center"/>
+              SelectedItem="{Binding SelectedLap}" 
+              Width="300" Margin="0,0,0,10" 
+              DisplayMemberPath="DisplayName"
+              HorizontalAlignment="Center"/>
+
+            <ComboBox ItemsSource="{Binding AvailableLaps}" 
+              SelectedItem="{Binding ComparisonLap}" 
+              Width="300" Margin="0,0,0,20" 
+              DisplayMemberPath="DisplayName"
+              HorizontalAlignment="Center"/>
 
             <lvc:CartesianChart Series="{Binding TelemetrySeries}"
-                    XAxes="{Binding XAxes}"
-                    YAxes="{Binding YAxes}"
-                    LegendPosition="Right"
-                    Width="750"
-                    Height="400"
-                    ZoomMode="X" />
+                        XAxes="{Binding XAxes}"
+                        YAxes="{Binding YAxes}"
+                        LegendPosition="Right"
+                        Width="750"
+                        Height="400"
+                        ZoomMode="X" />
         </StackPanel>
     </Grid>
 </Window>

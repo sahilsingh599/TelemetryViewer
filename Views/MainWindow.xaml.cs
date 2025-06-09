@@ -8,12 +8,6 @@ namespace TelemetryViewer.Views
         public MainWindow()
         {
             InitializeComponent();
-
-            Loaded += async (_, _) =>
-            {
-                if (DataContext is MainViewModel vm)
-                    await vm.LoadTelemetryFromFileAsync("");
-            };
         }
     }
 }
