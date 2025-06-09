@@ -12,7 +12,7 @@ namespace TelemetryViewer.Views
             Loaded += async (_, _) =>
             {
                 if (DataContext is MainViewModel vm)
-                    await vm.LoadTelemetryAsync();
+                    await vm.LoadTelemetryFromFileAsync("");
             };
         }
     }
