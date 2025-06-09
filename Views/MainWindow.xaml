@@ -26,6 +26,17 @@
               Width="300" Margin="0,0,0,20" 
               DisplayMemberPath="DisplayName"
               HorizontalAlignment="Center"/>
+            
+            <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,0,0,10">
+                <TextBlock Text="Sync: " VerticalAlignment="Center" Margin="0,0,5,0"/>
+                <ComboBox Width="120"
+                          SelectedValue="{Binding SyncMode}"
+                          SelectedValuePath="Content"
+                         HorizontalAlignment="Center">
+                <ComboBoxItem Content="AlignStart"/>
+                <ComboBoxItem Content="AlignEnd"/>
+                </ComboBox>
+            </StackPanel>
 
             <lvc:CartesianChart Series="{Binding TelemetrySeries}"
                         XAxes="{Binding XAxes}"
