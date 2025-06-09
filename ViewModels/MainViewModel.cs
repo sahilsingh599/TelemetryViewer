@@ -126,17 +126,21 @@ namespace TelemetryViewer.ViewModels
                 var speed = new List<ObservablePoint>();
                 var throttle = new List<ObservablePoint>();
                 var brake = new List<ObservablePoint>();
+                var gear = new List<ObservablePoint>();
 
                 foreach (var point in mainLap.data)
                 {
                     speed.Add(new ObservablePoint(point.Time, point.Speed));
                     throttle.Add(new ObservablePoint(point.Time, point.Throttle));
                     brake.Add(new ObservablePoint(point.Time, point.Brake));
+                    gear.Add(new ObservablePoint(point.Time, point.Gear));
                 }
 
                 series.Add(new LineSeries<ObservablePoint> { Values = speed, Name = $"Speed ({mainLap.driver})", Stroke = new SolidColorPaint(SKColors.Blue, 2), Fill = null });
                 series.Add(new LineSeries<ObservablePoint> { Values = throttle, Name = $"Throttle ({mainLap.driver})", Stroke = new SolidColorPaint(SKColors.Green, 2), Fill = null });
                 series.Add(new LineSeries<ObservablePoint> { Values = brake, Name = $"Brake ({mainLap.driver})", Stroke = new SolidColorPaint(SKColors.Red, 2), Fill = null });
+                series.Add(new LineSeries<ObservablePoint> { Values = gear, Name = $"Gear ({mainLap.driver})", Stroke = new SolidColorPaint(SKColors.Purple, 2), Fill = null });
+
             }
 
             if (compLap?.data?.Count > 0)
@@ -151,6 +155,7 @@ namespace TelemetryViewer.ViewModels
                 var compSpeed = new List<ObservablePoint>();
                 var compThrottle = new List<ObservablePoint>();
                 var compBrake = new List<ObservablePoint>();
+                var compGear = new List<ObservablePoint>();
 
                 foreach (var point in compLap.data)
                 {
@@ -158,11 +163,13 @@ namespace TelemetryViewer.ViewModels
                     compSpeed.Add(new ObservablePoint(t, point.Speed));
                     compThrottle.Add(new ObservablePoint(t, point.Throttle));
                     compBrake.Add(new ObservablePoint(t, point.Brake));
+                    compGear.Add(new ObservablePoint(t, point.Gear));
                 }
 
                 series.Add(new LineSeries<ObservablePoint> { Values = compSpeed, Name = $"Speed ({compLap.driver})", Stroke = new SolidColorPaint(SKColors.LightBlue, 2), Fill = null });
                 series.Add(new LineSeries<ObservablePoint> { Values = compThrottle, Name = $"Throttle ({compLap.driver})", Stroke = new SolidColorPaint(SKColors.LightGreen, 2), Fill = null });
                 series.Add(new LineSeries<ObservablePoint> { Values = compBrake, Name = $"Brake ({compLap.driver})", Stroke = new SolidColorPaint(SKColors.OrangeRed, 2), Fill = null });
+                series.Add(new LineSeries<ObservablePoint> { Values = compGear, Name = $"Gear ({compLap.driver})", Stroke = new SolidColorPaint(SKColors.MediumPurple, 2), Fill = null });
             }
 
             Console.WriteLine($"Final series count: {series.Count}");
