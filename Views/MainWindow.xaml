@@ -4,7 +4,7 @@
         xmlns:lvc="clr-namespace:LiveChartsCore.SkiaSharpView.WPF;assembly=LiveChartsCore.SkiaSharpView.WPF"
         xmlns:lvcCore="clr-namespace:LiveChartsCore;assembly=LiveChartsCore"
         xmlns:viewModels="clr-namespace:TelemetryViewer.ViewModels"
-        Title="F1 Telemetry Viewer" Height="500" Width="800"
+        Title="F1 Telemetry Viewer - Version 1.0.0" Height="500" Width="800"
         Background="White">
 
     <Window.DataContext>
