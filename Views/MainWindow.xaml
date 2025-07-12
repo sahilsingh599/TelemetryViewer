@@ -14,26 +14,36 @@
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
-            <!-- Row 0: Header & checkboxes -->
+            <!-- Row 0: Session Selection Controls -->
             <RowDefinition Height="Auto"/>
             <!-- Row 1: Dropdowns -->
             <RowDefinition Height="*"/>
             <!-- Row 2: Chart -->
+            <RowDefinition Height="Auto"/>
+            <!-- Row 3: Summary Section -->
         </Grid.RowDefinitions>
 
-        <!-- Row 0: Checkboxes -->
+        <!-- Row 0: Session Selection Controls -->
         <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Margin="10" Grid.Row="0">
-            <CheckBox Content="Speed" IsChecked="{Binding ShowSpeed}" Margin="5"/>
-            <CheckBox Content="Throttle" IsChecked="{Binding ShowThrottle}" Margin="5"/>
-            <CheckBox Content="Brake" IsChecked="{Binding ShowBrake}" Margin="5"/>
-            <CheckBox Content="Gear" IsChecked="{Binding ShowGear}" Margin="5"/>
-            <CheckBox Content="Delta" IsChecked="{Binding ShowDelta}" Margin="5"/>
+            <TextBlock Text="Country:" Margin="5" VerticalAlignment="Center"/>
+            <ComboBox Width="120" ItemsSource="{Binding Countries}" SelectedItem="{Binding SelectedCountry}" Margin="5"/>
+            <TextBlock Text="Year:" Margin="5" VerticalAlignment="Center"/>
+            <ComboBox Width="80" ItemsSource="{Binding Years}" SelectedItem="{Binding SelectedYear}" Margin="5"/>
+            <TextBlock Text="Session Type:" Margin="5" VerticalAlignment="Center"/>
+            <ComboBox Width="120" ItemsSource="{Binding SessionTypes}" SelectedItem="{Binding SelectedSessionType}" Margin="5"/>
+            <Button Content="Load Sessions" Command="{Binding LoadSessionsCommand}" Margin="10,0,0,0"/>
+            <TextBlock Text="Session:" Margin="5" VerticalAlignment="Center"/>
+            <ComboBox Width="200" ItemsSource="{Binding AvailableSessions}" SelectedItem="{Binding SelectedSession}" Margin="5"/>
+            <TextBlock Text="Lap Number:" Margin="5" VerticalAlignment="Center"/>
+            <TextBox Width="50" Text="{Binding SelectedLapNumber, UpdateSourceTrigger=PropertyChanged}" Margin="5"/>
         </StackPanel>
 
-        <!-- Row 1: Lap Selectors -->
+        <!-- Row 1: Driver Selectors for OpenF1 -->
         <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Margin="10" Grid.Row="1">
-            <ComboBox Width="200" ItemsSource="{Binding AvailableLaps}" SelectedItem="{Binding SelectedLap}" DisplayMemberPath="DisplayName" Margin="10"/>
-            <ComboBox Width="200" ItemsSource="{Binding AvailableLaps}" SelectedItem="{Binding ComparisonLap}" DisplayMemberPath="DisplayName" Margin="10"/>
+            <TextBlock Text="OpenF1 Driver Names:" Margin="5" VerticalAlignment="Center"/>
+            <ComboBox Width="150" ItemsSource="{Binding OpenF1Drivers}" SelectedItem="{Binding SelectedOpenF1Driver1}" DisplayMemberPath="Name" Margin="5"/>
+            <ComboBox Width="150" ItemsSource="{Binding OpenF1Drivers}" SelectedItem="{Binding SelectedOpenF1Driver2}" DisplayMemberPath="Name" Margin="5"/>
+            <Button Content="Load OpenF1 Data" Command="{Binding LoadOpenF1DataCommand}" Margin="10,0,0,0"/>
         </StackPanel>
 
         <!-- Row 2: Chart -->
@@ -46,5 +56,14 @@
                             LegendPosition="Right"
                             ZoomMode="X"
                             DrawMarginFrame="{x:Null}" />
+
+        <!-- Row 3: Summary Section -->
+        <TextBlock Grid.Row="3"
+                   Margin="10,0,10,10"
+                   Text="{Binding LapComparisonSummary}"
+                   FontWeight="Bold"
+                   FontSize="16"
+                   Foreground="DarkBlue"
+                   TextAlignment="Center"/>
     </Grid>
 </Window>

@@ -14,34 +14,158 @@ using LiveChartsCore.SkiaSharpView;
 using LiveChartsCore.SkiaSharpView.Painting;
 using LiveChartsCore.SkiaSharpView.Painting.Effects;
 using SkiaSharp;
+using System.Windows.Input;
 
 namespace TelemetryViewer.ViewModels
 {
     public class MainViewModel : INotifyPropertyChanged
     {
-        public ObservableCollection<LapFileEntry> AvailableLaps { get; set; } = new();
+        // Country, Year, Session, Lap selection
+        public ObservableCollection<string> Countries { get; set; } = new() { "Bahrain", "Belgium", "Italy", "Monaco", "Great Britain", "Hungary", "Netherlands", "Japan", "Singapore", "Australia", "Canada", "Austria", "Spain", "Azerbaijan", "Saudi Arabia", "United States", "Mexico", "Brazil", "Abu Dhabi", "Qatar" };
+        public ObservableCollection<int> Years { get; set; } = new() { 2023, 2022, 2021, 2020, 2019 };
+        public ObservableCollection<string> SessionTypes { get; set; } = new() { "Race", "Sprint", "Qualifying", "Practice 1", "Practice 2", "Practice 3" };
+        private string _selectedCountry = "Belgium";
+        public string SelectedCountry { get => _selectedCountry; set { _selectedCountry = value; OnPropertyChanged(); } }
+        private int _selectedYear = 2023;
+        public int SelectedYear { get => _selectedYear; set { _selectedYear = value; OnPropertyChanged(); } }
+        private string _selectedSessionType = "Sprint";
+        public string SelectedSessionType { get => _selectedSessionType; set { _selectedSessionType = value; OnPropertyChanged(); } }
+        private string _selectedLapNumber = "1";
+        public string SelectedLapNumber { get => _selectedLapNumber; set { _selectedLapNumber = value; OnPropertyChanged(); } }
 
-        private LapFileEntry? _selectedLap;
-        public LapFileEntry? SelectedLap
+        public ObservableCollection<SessionInfo> AvailableSessions { get; set; } = new();
+        private SessionInfo _selectedSession;
+        public SessionInfo SelectedSession { get => _selectedSession; set { _selectedSession = value; OnPropertyChanged(); } }
+
+        // OpenF1 driver selection
+        public ObservableCollection<DriverInfo> OpenF1Drivers { get; set; } = new()
         {
-            get => _selectedLap;
+            new DriverInfo { Number = 44, Name = "Lewis Hamilton" },
+            new DriverInfo { Number = 4, Name = "Lando Norris" },
+            new DriverInfo { Number = 81, Name = "Oscar Piastri" },
+            new DriverInfo { Number = 1, Name = "Max Verstappen" },
+            new DriverInfo { Number = 55, Name = "Carlos Sainz" },
+            new DriverInfo { Number = 63, Name = "George Russell" },
+            new DriverInfo { Number = 11, Name = "Sergio Perez" },
+            new DriverInfo { Number = 16, Name = "Charles Leclerc" },
+            new DriverInfo { Number = 77, Name = "Valtteri Bottas" },
+            new DriverInfo { Number = 24, Name = "Zhou Guanyu" },
+            new DriverInfo { Number = 31, Name = "Esteban Ocon" },
+            new DriverInfo { Number = 10, Name = "Pierre Gasly" },
+            new DriverInfo { Number = 20, Name = "Kevin Magnussen" },
+            new DriverInfo { Number = 27, Name = "Nico Hulkenberg" },
+            new DriverInfo { Number = 22, Name = "Yuki Tsunoda" },
+            new DriverInfo { Number = 23, Name = "Alex Albon" },
+            new DriverInfo { Number = 2, Name = "Logan Sargeant" },
+            new DriverInfo { Number = 3, Name = "Daniel Ricciardo" },
+            new DriverInfo { Number = 14, Name = "Fernando Alonso" },
+            new DriverInfo { Number = 18, Name = "Lance Stroll" }
+        };
+        private DriverInfo _selectedOpenF1Driver1;
+        public DriverInfo SelectedOpenF1Driver1
+        {
+            get => _selectedOpenF1Driver1;
             set
             {
-                _selectedLap = value;
-                OnPropertyChanged();
-                _ = LoadBothLapsAsync();
+                if (_selectedOpenF1Driver1 != value)
+                {
+                    _selectedOpenF1Driver1 = value;
+                    OnPropertyChanged();
+                }
+            }
+        }
+        private DriverInfo _selectedOpenF1Driver2;
+        public DriverInfo SelectedOpenF1Driver2
+        {
+            get => _selectedOpenF1Driver2;
+            set
+            {
+                if (_selectedOpenF1Driver2 != value)
+                {
+                    _selectedOpenF1Driver2 = value;
+                    OnPropertyChanged();
+                }
             }
         }
 
-        private LapFileEntry? _comparisonLap;
-        public LapFileEntry? ComparisonLap
+        public ICommand LoadSessionsCommand => new RelayCommand(async _ => await LoadSessionsAsync());
+        public ICommand LoadOpenF1DataCommand => new RelayCommand(async _ => await LoadOpenF1DataAsync());
+
+        public MainViewModel() {
+            _selectedOpenF1Driver1 = OpenF1Drivers.First(d => d.Number == 44);
+            _selectedOpenF1Driver2 = OpenF1Drivers.First(d => d.Number == 4);
+        }
+
+        public event PropertyChangedEventHandler? PropertyChanged;
+        private void OnPropertyChanged([CallerMemberName] string? name = null)
         {
-            get => _comparisonLap;
-            set
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));
+        }
+
+        private async Task LoadSessionsAsync()
+        {
+            var openF1 = new OpenF1Service();
+            var sessions = await openF1.GetSessionsAsync(SelectedCountry, SelectedSessionType, SelectedYear);
+            AvailableSessions.Clear();
+            foreach (var s in sessions)
+                AvailableSessions.Add(s);
+            SelectedSession = AvailableSessions.FirstOrDefault();
+        }
+
+        // OpenF1 data loading logic
+        private async Task LoadOpenF1DataAsync()
+        {
+            if (SelectedSession == null) { LapComparisonSummary = ""; return; }
+            if (!int.TryParse(SelectedLapNumber, out int lapNumber) || lapNumber <= 0) { LapComparisonSummary = ""; return; }
+            var openF1 = new OpenF1Service();
+            var driverInfos = new[] { SelectedOpenF1Driver1, SelectedOpenF1Driver2 };
+            var series = new List<ISeries>();
+            Sections.Clear();
+
+            double?[] lapTimes = new double?[2];
+
+            for (int i = 0; i < driverInfos.Length; i++)
             {
-                _comparisonLap = value;
-                OnPropertyChanged();
-                _ = LoadBothLapsAsync();
+                var driver = driverInfos[i];
+                var laps = await openF1.GetLapSummariesAsync(SelectedSession.session_key, driver.Number);
+                if (laps.Count > 0)
+                {
+                    var filteredLaps = laps.Where(l => l.lap_number == lapNumber).ToList();
+                    if (!filteredLaps.Any()) continue;
+                    lapTimes[i] = filteredLaps[0].lap_duration;
+                    series.Add(new LineSeries<ObservablePoint>
+                    {
+                        Values = filteredLaps
+                            .Where(l => l.lap_duration.HasValue && l.lap_number.HasValue)
+                            .Select(l => new ObservablePoint(l.lap_number.Value, l.lap_duration.Value)).ToList(),
+                        Name = $"Lap Time ({driver.Name})",
+                        Stroke = new SolidColorPaint(SKColors.Blue, 2),
+                        Fill = null
+                    });
+                }
+            }
+            TelemetrySeries = series.ToArray();
+
+            // Set summary
+            if (lapTimes[0].HasValue && lapTimes[1].HasValue)
+            {
+                double diff = lapTimes[0].Value - lapTimes[1].Value;
+                if (Math.Abs(diff) < 0.001)
+                {
+                    LapComparisonSummary = $"Both drivers set the same lap time: {lapTimes[0]:0.000} s.";
+                }
+                else if (diff < 0)
+                {
+                    LapComparisonSummary = $"{SelectedOpenF1Driver1.Name} was faster by {Math.Abs(diff):0.000} s.";
+                }
+                else
+                {
+                    LapComparisonSummary = $"{SelectedOpenF1Driver2.Name} was faster by {Math.Abs(diff):0.000} s.";
+                }
+            }
+            else
+            {
+                LapComparisonSummary = "Lap time data not available for both drivers.";
             }
         }
 
@@ -68,284 +192,26 @@ namespace TelemetryViewer.ViewModels
 
         public ObservableCollection<RectangularSection> Sections { get; set; } = new();
 
-        // Checkbox toggles
-        private bool _showSpeed = true;
-        public bool ShowSpeed
+        private string _lapComparisonSummary;
+        public string LapComparisonSummary
         {
-            get => _showSpeed;
-            set
-            {
-                if (_showSpeed != value)
-                {
-                    _showSpeed = value;
-                    OnPropertyChanged();
-                    _ = LoadBothLapsAsync();
-                }
-            }
+            get => _lapComparisonSummary;
+            set { _lapComparisonSummary = value; OnPropertyChanged(); }
         }
+    }
 
-        private bool _showThrottle = true;
-        public bool ShowThrottle
+    // RelayCommand implementation
+    public class RelayCommand : ICommand
+    {
+        private readonly Action<object?> _execute;
+        private readonly Func<object?, bool>? _canExecute;
+        public RelayCommand(Action<object?> execute, Func<object?, bool>? canExecute = null)
         {
-            get => _showThrottle;
-            set
-            {
-                if (_showThrottle != value)
-                {
-                    _showThrottle = value;
-                    OnPropertyChanged();
-                    _ = LoadBothLapsAsync();
-                }
-            }
+            _execute = execute;
+            _canExecute = canExecute;
         }
-
-        private bool _showBrake = true;
-        public bool ShowBrake
-        {
-            get => _showBrake;
-            set
-            {
-                if (_showBrake != value)
-                {
-                    _showBrake = value;
-                    OnPropertyChanged();
-                    _ = LoadBothLapsAsync();
-                }
-            }
-        }
-
-        private bool _showGear = true;
-        public bool ShowGear
-        {
-            get => _showGear;
-            set
-            {
-                if (_showGear != value)
-                {
-                    _showGear = value;
-                    OnPropertyChanged();
-                    _ = LoadBothLapsAsync();
-                }
-            }
-        }
-
-        private bool _showDelta = true;
-        public bool ShowDelta
-        {
-            get => _showDelta;
-            set
-            {
-                if (_showDelta != value)
-                {
-                    _showDelta = value;
-                    OnPropertyChanged();
-                    _ = LoadBothLapsAsync();
-                }
-            }
-        }
-
-        public MainViewModel() { }
-
-        public async Task InitializeAsync()
-        {
-            await LoadLapListAsync();
-        }
-
-        private async Task LoadLapListAsync()
-        {
-            string folder = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Data", "Laps");
-            if (!Directory.Exists(folder)) return;
-
-            var files = Directory.GetFiles(folder, "*.json");
-            foreach (var file in files)
-            {
-                var display = Path.GetFileNameWithoutExtension(file).Replace("_", " ");
-                AvailableLaps.Add(new LapFileEntry { FilePath = file, DisplayName = display });
-            }
-
-            if (AvailableLaps.Count > 0)
-                SelectedLap = AvailableLaps[0];
-        }
-
-        private async Task LoadBothLapsAsync()
-        {
-            if (SelectedLap == null) return;
-
-            var loader = new TelemetryDataService();
-            var mainLap = await loader.LoadFromFileAsync(SelectedLap.FilePath);
-            LapData? compLap = null;
-            if (ComparisonLap != null && ComparisonLap.FilePath != SelectedLap.FilePath)
-                compLap = await loader.LoadFromFileAsync(ComparisonLap.FilePath);
-
-            var series = new List<ISeries>();
-            Sections.Clear();
-
-            // Calculate distance for both laps
-            ComputeDistance(mainLap);
-            if (compLap != null) ComputeDistance(compLap);
-
-            double maxDist = mainLap.data.Last().Distance;
-            double sectorLen = maxDist / 3;
-
-            for (int i = 0; i < 3; i++)
-            {
-                Sections.Add(new RectangularSection
-                {
-                    Xi = i * sectorLen,
-                    Xj = (i + 1) * sectorLen,
-                    Label = $"Sector {i + 1}",
-                    LabelPaint = new SolidColorPaint(SKColors.Black),
-                    LabelSize = 14,
-                    Fill = new SolidColorPaint(SKColors.LightGray.WithAlpha(40))
-                });
-            }
-
-            if (mainLap.data.Count > 0 && ShowSpeed)
-                series.Add(new LineSeries<ObservablePoint>
-                {
-                    Values = mainLap.data.Select(p => new ObservablePoint(p.Distance, p.Speed)).ToList(),
-                    Name = $"Speed ({mainLap.driver})",
-                    Stroke = new SolidColorPaint(SKColors.Blue, 2),
-                    Fill = null
-                });
-
-            if (mainLap.data.Count > 0 && ShowThrottle)
-                series.Add(new LineSeries<ObservablePoint>
-                {
-                    Values = mainLap.data.Select(p => new ObservablePoint(p.Distance, p.Throttle)).ToList(),
-                    Name = $"Throttle ({mainLap.driver})",
-                    Stroke = new SolidColorPaint(SKColors.Green, 2),
-                    Fill = null
-                });
-
-            if (mainLap.data.Count > 0 && ShowBrake)
-                series.Add(new LineSeries<ObservablePoint>
-                {
-                    Values = mainLap.data.Select(p => new ObservablePoint(p.Distance, p.Brake)).ToList(),
-                    Name = $"Brake ({mainLap.driver})",
-                    Stroke = new SolidColorPaint(SKColors.Red, 2),
-                    Fill = null
-                });
-
-            if (mainLap.data.Count > 0 && ShowGear)
-                series.Add(new LineSeries<ObservablePoint>
-                {
-                    Values = mainLap.data.Select(p => new ObservablePoint(p.Distance, p.Gear)).ToList(),
-                    Name = $"Gear ({mainLap.driver})",
-                    Stroke = new SolidColorPaint(SKColors.Purple, 2),
-                    Fill = null,
-                    GeometrySize = 0
-                });
-
-            if (compLap != null && compLap.data.Count > 0)
-            {
-                if (ShowSpeed)
-                    series.Add(new LineSeries<ObservablePoint>
-                    {
-                        Values = compLap.data.Select(p => new ObservablePoint(p.Distance, p.Speed)).ToList(),
-                        Name = $"Speed ({compLap.driver})",
-                        Stroke = new SolidColorPaint(SKColors.LightBlue, 2),
-                        Fill = null
-                    });
-
-                if (ShowThrottle)
-                    series.Add(new LineSeries<ObservablePoint>
-                    {
-                        Values = compLap.data.Select(p => new ObservablePoint(p.Distance, p.Throttle)).ToList(),
-                        Name = $"Throttle ({compLap.driver})",
-                        Stroke = new SolidColorPaint(SKColors.LightGreen, 2),
-                        Fill = null
-                    });
-
-                if (ShowBrake)
-                    series.Add(new LineSeries<ObservablePoint>
-                    {
-                        Values = compLap.data.Select(p => new ObservablePoint(p.Distance, p.Brake)).ToList(),
-                        Name = $"Brake ({compLap.driver})",
-                        Stroke = new SolidColorPaint(SKColors.OrangeRed, 2),
-                        Fill = null
-                    });
-
-                if (ShowGear)
-                    series.Add(new LineSeries<ObservablePoint>
-                    {
-                        Values = compLap.data.Select(p => new ObservablePoint(p.Distance, p.Gear)).ToList(),
-                        Name = $"Gear ({compLap.driver})",
-                        Stroke = new SolidColorPaint(SKColors.MediumPurple, 2),
-                        Fill = null,
-                        GeometrySize = 0
-                    });
-
-                if (ShowDelta)
-                {
-                    var mainSample = Resample(mainLap.data, 5);
-                    var compSample = Resample(compLap.data, 5);
-                    var deltaPoints = new List<ObservablePoint>();
-                    double cumulative = 0;
-
-                    deltaPoints.Add(new ObservablePoint(mainSample[0].Distance, 0));
-                    for (int i = 1; i < Math.Min(mainSample.Count, compSample.Count); i++)
-                    {
-                        double d = (compSample[i].Time - compSample[i - 1].Time) -
-                                   (mainSample[i].Time - mainSample[i - 1].Time);
-                        cumulative += d;
-                        deltaPoints.Add(new ObservablePoint(mainSample[i].Distance, cumulative));
-                    }
-
-                    series.Add(new LineSeries<ObservablePoint>
-                    {
-                        Values = deltaPoints,
-                        Name = $"Δt ({compLap.driver} - {mainLap.driver})",
-                        Stroke = new SolidColorPaint(SKColors.Orange, 2)
-                        {
-                            PathEffect = new DashEffect(new float[] { 6, 6 })
-                        },
-                        Fill = null,
-                        GeometrySize = 0
-                    });
-                }
-            }
-
-            TelemetrySeries = series.ToArray();
-        }
-
-        private void ComputeDistance(LapData lap)
-        {
-            double cumulative = 0;
-            lap.data[0].Distance = 0;
-            for (int i = 1; i < lap.data.Count; i++)
-            {
-                var dt = lap.data[i].Time - lap.data[i - 1].Time;
-                cumulative += lap.data[i].Speed * dt / 3.6;
-                lap.data[i].Distance = cumulative;
-            }
-        }
-
-        public event PropertyChangedEventHandler? PropertyChanged;
-        private void OnPropertyChanged([CallerMemberName] string? name = null)
-        {
-            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));
-        }
-
-        List<(double Distance, double Time)> Resample(List<TelemetryPoint> data, double interval)
-        {
-            var result = new List<(double, double)>();
-            double maxDist = data.Last().Distance;
-
-            for (double d = 0; d <= maxDist; d += interval)
-            {
-                var left = data.LastOrDefault(p => p.Distance <= d);
-                var right = data.FirstOrDefault(p => p.Distance >= d);
-
-                if (left != null && right != null && left != right)
-                {
-                    double frac = (d - left.Distance) / (right.Distance - left.Distance);
-                    double time = left.Time + frac * (right.Time - left.Time);
-                    result.Add((d, time));
-                }
-            }
-
-            return result;
-        }
+        public bool CanExecute(object? parameter) => _canExecute == null || _canExecute(parameter);
+        public void Execute(object? parameter) => _execute(parameter);
+        public event EventHandler? CanExecuteChanged { add { } remove { } }
     }
 }
