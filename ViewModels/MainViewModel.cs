@@ -69,11 +69,80 @@ namespace TelemetryViewer.ViewModels
         public ObservableCollection<RectangularSection> Sections { get; set; } = new();
 
         // Checkbox toggles
-        public bool ShowSpeed { get; set; } = true;
-        public bool ShowThrottle { get; set; } = true;
-        public bool ShowBrake { get; set; } = true;
-        public bool ShowGear { get; set; } = true;
-        public bool ShowDelta { get; set; } = true;
+        private bool _showSpeed = true;
+        public bool ShowSpeed
+        {
+            get => _showSpeed;
+            set
+            {
+                if (_showSpeed != value)
+                {
+                    _showSpeed = value;
+                    OnPropertyChanged();
+                    _ = LoadBothLapsAsync();
+                }
+            }
+        }
+
+        private bool _showThrottle = true;
+        public bool ShowThrottle
+        {
+            get => _showThrottle;
+            set
+            {
+                if (_showThrottle != value)
+                {
+                    _showThrottle = value;
+                    OnPropertyChanged();
+                    _ = LoadBothLapsAsync();
+                }
+            }
+        }
+
+        private bool _showBrake = true;
+        public bool ShowBrake
+        {
+            get => _showBrake;
+            set
+            {
+                if (_showBrake != value)
+                {
+                    _showBrake = value;
+                    OnPropertyChanged();
+                    _ = LoadBothLapsAsync();
+                }
+            }
+        }
+
+        private bool _showGear = true;
+        public bool ShowGear
+        {
+            get => _showGear;
+            set
+            {
+                if (_showGear != value)
+                {
+                    _showGear = value;
+                    OnPropertyChanged();
+                    _ = LoadBothLapsAsync();
+                }
+            }
+        }
+
+        private bool _showDelta = true;
+        public bool ShowDelta
+        {
+            get => _showDelta;
+            set
+            {
+                if (_showDelta != value)
+                {
+                    _showDelta = value;
+                    OnPropertyChanged();
+                    _ = LoadBothLapsAsync();
+                }
+            }
+        }
 
         public MainViewModel() { }
 
